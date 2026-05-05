@@ -21,7 +21,8 @@ from pathlib import Path
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('XApp', '1.0')
-from gi.repository import Gio, GLib, Gtk, Pango, Gdk, XApp
+gi.require_version('GLibUnix', '2.0')
+from gi.repository import Gio, GLib, Gtk, Pango, Gdk, XApp, GLibUnix
 
 CURRENT_PATH = os.path.dirname(os.path.abspath(__file__))
 PYTHON_CS_MODULE_PATH = os.path.join(CURRENT_PATH, "modules")
@@ -305,7 +306,11 @@ class MainWindow(Gio.Application):
         self.search_entry.connect("icon-press", self.onClearSearchBox)
 
         self.window.connect("destroy", self._quit)
-        GLib.unix_signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self._quit)
+
+        try:
+            GLibUnix.signal_add(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self._quit)
+        except AttributeError:
+            GLibUnix.signal_add_full(GLib.PRIORITY_DEFAULT, signal.SIGTERM, self._quit, None)
 
         self.builder.connect_signals(self)
         self.sidePages: typing.List[SidePageData] = []
